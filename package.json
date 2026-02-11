@@ -1,5 +1,5 @@
 {
-  "name": "mstry-message",
+  "name": "mystery-message",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.7",
+    "@react-email/render": "^2.0.4",
     "bcryptjs": "^3.0.3",
     "mongoose": "^9.1.2",
     "next": "16.1.1",

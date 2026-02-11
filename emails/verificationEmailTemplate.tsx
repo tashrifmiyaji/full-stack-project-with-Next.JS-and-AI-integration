@@ -9,6 +9,7 @@ export default function verificationEmailTemplate({ username, otp }: verificatio
   return (
     <div>
       <h1>Welcome, {username}!</h1>
+      <p>Your verification code is: <strong>{otp}</strong></p>
     </div>
   );
 }

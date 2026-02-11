@@ -1,4 +1,3 @@
-import { asyncWrapProviders } from "async_hooks";
 import mongoose from "mongoose";
 
 type ConnectionObject = {
@@ -15,7 +14,6 @@ async function dbConnect(): Promise<void> {
 
 	try {
 		const db = await mongoose.connect(process.env.MONGODB_URI || "", {});
-		console.log(db);
 		connection.isConnected = db.connections[0].readyState;
 		console.log("database connected successfully");
 	} catch (error) {

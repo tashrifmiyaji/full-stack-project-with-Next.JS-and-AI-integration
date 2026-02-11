@@ -1,14 +1,10 @@
-// external inputs
-import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 // internal inputs
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User.model";
 import { sendVerificationEmail } from "@/helpers/sendVerificationEmail";
-import { success } from "zod";
-
-async function POST(req: Request) {
+export async function POST(req: Request) {
 	await dbConnect();
 
 	try {
@@ -79,7 +75,7 @@ async function POST(req: Request) {
 			return Response.json(
 				{
 					success: false,
-					message: emailResponse.messages,
+					message: emailResponse.message,
 				},
 				{ status: 500 },
 			);
