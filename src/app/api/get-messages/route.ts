@@ -45,5 +45,14 @@ export async function GET(req: Request) {
 			},
 			{ status: 200 },
 		);
-	} catch (error) {}
+	} catch (error) {
+		console.log("error adding messages: ", error);
+		return Response.json(
+			{
+				success: false,
+				message: "internal server error!",
+			},
+			{ status: 500 },
+		);
+	}
 }
