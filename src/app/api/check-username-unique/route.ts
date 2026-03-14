@@ -9,10 +9,11 @@ const UsernameQuerySchema = z.object({
 
 export async function GET(req: Request) {
 	await dbConnect();
+	console.log("hello");
 	try {
 		const { searchParams } = new URL(req.url);
 		const queryParam = {
-			username: searchParams.get("username"),
+			username: searchParams.get("username") ?? "",
 		};
 		// validate with zod
 		const result = UsernameQuerySchema.safeParse(queryParam);
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
 				result.error.format().username?._errors || [];
 			return Response.json(
 				{
-					success: "false",
+					success: false,
 					message:
 						usernameErrors?.length > 0
 							? usernameErrors.join(", ")
@@ -49,7 +50,7 @@ export async function GET(req: Request) {
 				success: true,
 				message: "username is available",
 			},
-			{ status: 500 },
+			{ status: 200 },
 		);
 	} catch (error) {
 		console.error("Error checking username!", error);
