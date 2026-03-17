@@ -140,13 +140,16 @@ const page = () => {
                                 )
                             }}
                         />
-                        <Button type="submit" disabled={isSubmitting}>
-                            {
-                                isSubmitting ? (<>
-                                    <Loader2 className="mr-2 w-4 animate-spin" /> Please Wait
-                                </>) : ("Signup")
-                            }
-                        </Button>
+                        <div className="flex justify-end">
+
+                            <Button type="submit" disabled={isSubmitting}>
+                                {
+                                    isSubmitting ? (<>
+                                        <Loader2 className="mr-2 w-4 animate-spin" /> Please Wait
+                                    </>) : ("Signup")
+                                }
+                            </Button>
+                        </div>
                     </form>
                 </Form>
                 <div className="text-center mt-4">
