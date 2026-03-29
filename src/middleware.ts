@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { authSecret } from "@/lib/auth-secret";
 
 export async function middleware(req: NextRequest) {
-	const token = await getToken({ req });
+	const token = await getToken({ req, secret: authSecret });
 	const url = req.nextUrl;
 	const isAuthPage =
 		url.pathname.startsWith("/sign-in") ||
@@ -12,10 +13,12 @@ export async function middleware(req: NextRequest) {
 	const isHomePage = url.pathname === "/";
 
 	if (token && (isAuthPage || isHomePage)) {
+		console.log(`[middleware] token found, redirecting to /dashboard from ${url.pathname}`);
 		return NextResponse.redirect(new URL("/dashboard", req.url));
 	}
 
 	if (!token && isDashboardPage) {
+		console.log(`[middleware] token missing, redirecting to /sign-in from ${url.pathname}`);
 		return NextResponse.redirect(new URL("/sign-in", req.url));
 	}
 

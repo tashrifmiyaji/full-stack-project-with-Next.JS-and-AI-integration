@@ -58,6 +58,13 @@ const SignUpPage = () => {
         setIsSubmitting(true);
         try {
             const response = await axios.post<ApiResponse>('/api/sign-up', data);
+            sessionStorage.setItem(
+                "pending-verification-credentials",
+                JSON.stringify({
+                    identifier: data.username,
+                    password: data.password,
+                })
+            )
             toast.success("Success", {
                 description: response.data?.message
             })

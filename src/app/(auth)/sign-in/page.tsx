@@ -1,5 +1,6 @@
 'use client'
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios, { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { signInSchema } from "@/schemas/signInSchema";
 import { signIn } from "next-auth/react";
+import { ApiResponse } from "@/types/apiResponse";
 
 const SignInPage = () => {
     const router = useRouter()
@@ -24,20 +26,54 @@ const SignInPage = () => {
     })
 
     const onSubmit = async (data: z.infer<typeof signInSchema>) => {
+        try {
+            const userStatusResponse = await axios.post<ApiResponse>('/api/check-user-status', {
+                identifier: data.identifier,
+            })
+            console.log("[sign-in] check-user-status:", userStatusResponse.data)
+
+            if (!userStatusResponse.data.isVerified && userStatusResponse.data.username) {
+                toast.error("অ্যাকাউন্ট ভেরিফাই করা হয়নি", {
+                    description: "আগে আপনার ভেরিফিকেশন কোড দিয়ে অ্যাকাউন্ট ভেরিফাই করুন।"
+                })
+                setTimeout(() => {
+                    console.log("[sign-in] redirecting to verify page")
+                    router.replace(`/verify/${encodeURIComponent(userStatusResponse.data.username as string)}`)
+                }, 700)
+                return
+            }
+        } catch (error) {
+            const axiosError = error as AxiosError<ApiResponse>
+            toast.error("লগইন ব্যর্থ", {
+                description: axiosError.response?.data.message ?? "ইউজার খুঁজে পাওয়া যায়নি।"
+            })
+            return
+        }
+
         const result = await signIn("credentials", {
             redirect: false,
             identifier: data.identifier,
-            password: data.password
+            password: data.password,
+            callbackUrl: "/dashboard",
         })
+        console.log("[sign-in] signIn result:", result)
 
         if (result?.error) {
-            toast.error("Login Failed", {
-                description: "Incorrect credential!"
+            toast.error("লগইন ব্যর্থ", {
+                description: "ইমেইল/ইউজারনেম অথবা পাসওয়ার্ড ভুল।"
             })
+            return
         }
 
-        if (result?.url) {
-            router.replace('/dashboard')
+        if (result?.ok || !result?.error) {
+            toast.success("লগইন সফল", {
+                description: "আপনাকে ড্যাশবোর্ডে নেওয়া হচ্ছে।"
+            })
+            setTimeout(() => {
+                console.log("[sign-in] redirecting to dashboard")
+                router.replace("/dashboard")
+                router.refresh()
+            }, 700)
         }
     }
 

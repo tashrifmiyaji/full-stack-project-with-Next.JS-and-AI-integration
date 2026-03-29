@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 // internal imports
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User.model";
+import { authSecret } from "@/lib/auth-secret";
 
 type CredentialsInput = {
 	identifier: string;
@@ -64,6 +65,9 @@ export const authOptions: NextAuthOptions = {
 					);
 
 					if (isPasswordCorrect) {
+						console.log(
+							`[auth][authorize] success for identifier: ${typedCredentials.identifier}`,
+						);
 						return {
 							id: user._id.toString(),
 							_id: user._id.toString(),
@@ -73,6 +77,9 @@ export const authOptions: NextAuthOptions = {
 							isAcceptingMessage: user.isAcceptingMessage,
 						};
 					} else {
+						console.log(
+							`[auth][authorize] invalid password for identifier: ${typedCredentials.identifier}`,
+						);
 						throw new Error("invalid credential!");
 					}
 				} catch (err: unknown) {
@@ -110,5 +117,5 @@ export const authOptions: NextAuthOptions = {
 	session: {
 		strategy: "jwt",
 	},
-	secret: process.env.NEXT_AUTH_SECRET,
+	secret: authSecret,
 }

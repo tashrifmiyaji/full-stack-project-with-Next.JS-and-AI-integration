@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import AuthProvider from "@/context/authProvider";
 import { Toaster } from "@/components/ui/sonner"
 import Providers from "./Providers/Providers";
 import Navbar from "@/components/Navbar";
@@ -20,7 +19,7 @@ export default function RootLayout({
       <body className="antialiased">
         <Providers>
           <Navbar />
-          <AuthProvider>{children}</AuthProvider>
+          {children}
           <Toaster />
         </Providers>
       </body>
