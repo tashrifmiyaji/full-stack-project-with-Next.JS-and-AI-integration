@@ -8,8 +8,9 @@ import { acceptMessageSchema } from '@/schemas/acceptMessageSchema'
 import { ApiResponse } from '@/types/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios, { AxiosError } from 'axios'
+import { Loader2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -17,6 +18,7 @@ const page = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSwitchLoading, setSwitchLoading] = useState(false);
+  const [profileUrl, setProfileUrl] = useState('')
 
   const handleDeleteMessage = (messageId: any) => {
     setMessages(messages.filter((message) => {
@@ -41,11 +43,12 @@ const page = () => {
       setValue('acceptMessage', response.data.isAcceptingMessage ?? false)
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>
-      toast("Error", {
+      toast.error("Error", {
         description: axiosError.response?.data.message ||
           "Failed to fetch message settings!"
       })
     } finally {
+      setIsLoading(false)
       setSwitchLoading(false);
     }
   }, [setValue])
@@ -57,13 +60,13 @@ const page = () => {
       const response = await axios.get<ApiResponse>('/api/get-messages')
       setMessages(response.data.messages || []);
       if (refresh) {
-        toast("Refreshed Messages", {
+        toast.success("Refreshed Messages", {
           description: "Showing latest messages"
         })
       }
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>
-      toast("Error", {
+      toast.error("Error", {
         description: axiosError.response?.data.message ||
           "Failed to fetch message settings!"
       })
@@ -88,26 +91,31 @@ const page = () => {
       })
 
       setValue("acceptMessage", !acceptMessages);
-      toast(response.data.message)
+      toast.success(response.data.message)
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>
-      toast("Error", {
+      toast.error("Error", {
         description: axiosError.response?.data.message ||
           "Failed to fetch message settings!"
       })
     }
   }
-  const { username } = session?.user as User;
-  const baseUrl = `${window.location.protocol}//${window.location.host}`
-  const profileUrl = `${baseUrl}/u/${username}`
+  const username = (session?.user as User)?.username || ''
+  useEffect(() => {
+    if (typeof window !== 'undefined' && username) {
+      const baseUrl = `${window.location.protocol}//${window.location.host}`
+      setProfileUrl(`${baseUrl}/u/${username}`)
+    }
+  }, [username])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(profileUrl)
-    toast("URL copied", { description: "Profile URL has been copied to clipboard" })
+    toast.success("URL copied", { description: "Profile URL has been copied to clipboard" })
   }
-  if (!session || !session.user) {
-    return <div>Please login</div>
-  }
+
+  // if (!session || !session.user) {
+  //   return <div>Please login</div>
+  // }
 
   return (
     <div className='my-8 mx-4 md:mx-8 lg:mx-auto p-6 bg-white rounded w-full max-w-6xl'>
@@ -132,21 +140,25 @@ const page = () => {
       </div>
       <Separator />
 
-      <Button
-        className='mt-4 grid grid-cols-1 md:grid-cols-2 gap-6'
-      >
-        {messages.length > 0 ? (
-          messages.map((message, index) => (
-            <MessageCard
-              key={message._id.toString()}
-              message={message}
-              onMessageDelete={handleDeleteMessage}
-            />
-          ))
+      <div className='mt-4'>
+        {isLoading ? (
+          <div className='flex min-h-40 items-center justify-center rounded-lg border'>
+            <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+          </div>
+        ) : messages.length > 0 ? (
+          <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+            {messages.map((message) => (
+              <MessageCard
+                key={message._id.toString()}
+                message={message}
+                onMessageDelete={handleDeleteMessage}
+              />
+            ))}
+          </div>
         ) : (
-          <p>No messages to display.</p>
+          <p className='py-10 text-center text-muted-foreground'>No messages to display.</p>
         )}
-      </Button>
+      </div>
     </div>
   )
 }

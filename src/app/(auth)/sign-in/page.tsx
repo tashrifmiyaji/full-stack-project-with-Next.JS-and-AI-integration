@@ -32,7 +32,7 @@ const page = () => {
         })
 
         if (result?.error) {
-            toast("Login Failed", {
+            toast.error("Login Failed", {
                 description: "Incorrect credential!"
             })
         }

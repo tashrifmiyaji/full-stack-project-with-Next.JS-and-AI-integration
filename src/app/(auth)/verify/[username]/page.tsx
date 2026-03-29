@@ -25,14 +25,14 @@ const verifyAccount = () => {
                 username: params.username,
                 code: data.verifyCode
             });
-            toast("Success", {
+            toast.success("Success", {
                 description: response.data?.message
             })
             router.replace(`/sign-in`)
         } catch (error) {
             console.error("error in verify account!", error);
             const AxiosError = error as AxiosError<ApiResponse>;
-            toast("verify failed!", {
+            toast.error("verify failed!", {
                 description: AxiosError.response?.data.message,
             })
         }
