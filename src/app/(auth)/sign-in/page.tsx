@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
-import { useState } from "react";
 import { toast } from "sonner"
 import { useRouter } from "next/navigation";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { signInSchema } from "@/schemas/signInSchema";
 import { signIn } from "next-auth/react";
 
-const page = () => {
+const SignInPage = () => {
     const router = useRouter()
 
     //
@@ -104,4 +103,4 @@ const page = () => {
     )
 }
 
-export default page
+export default SignInPage

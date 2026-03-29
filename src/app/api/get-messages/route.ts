@@ -2,14 +2,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User.model";
-import { User } from "next-auth";
 import mongoose from "mongoose";
-import { success } from "zod";
 
-export async function GET(req: Request) {
+export async function GET() {
 	await dbConnect();
 	const session = await getServerSession(authOptions);
-	const user: User = session?.user;
 
 	if (!session || !session.user) {
 		return Response.json(
@@ -20,28 +17,28 @@ export async function GET(req: Request) {
 			{ status: 401 },
 		);
 	}
-	const userId = new mongoose.Types.ObjectId(user._id);
+	const userId = new mongoose.Types.ObjectId(session.user._id);
 	try {
-		const user = await UserModel.aggregate([
-			{ $match: { id: userId } },
+		const messagesByUser = await UserModel.aggregate([
+			{ $match: { _id: userId } },
 			{ $unwind: "$messages" },
 			{ $sort: { "messages.createdAt": -1 } },
 			{ $group: { _id: "$_id", messages: { $push: "$messages" } } },
 		]);
 
-		if (!user || user.length === 0) {
+		if (!messagesByUser || messagesByUser.length === 0) {
 			return Response.json(
 				{
-					success: false,
-					message: "user not found!",
+					success: true,
+					messages: [],
 				},
-				{ status: 404 },
+				{ status: 200 },
 			);
 		}
 		return Response.json(
 			{
 				success: true,
-				message: user[0].messages,
+				messages: messagesByUser[0].messages,
 			},
 			{ status: 200 },
 		);

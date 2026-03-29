@@ -4,7 +4,6 @@ import {
     CardAction,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
@@ -29,43 +28,48 @@ import { ApiResponse } from "@/types/apiResponse";
 
 type MessageCardProps = {
     message: Message,
-    onMessageDelete: (messageId: any) => void
+    onMessageDelete: (messageId: string) => void
 }
 
 const MessageCard = ({message, onMessageDelete}: MessageCardProps) => {
     const handleDeleteConfirm = async () => {
         const response = await axios.delete<ApiResponse>(`/api/delete-message/${message._id}`)
         toast.success(response.data.message)
-        onMessageDelete(message._id)
+        onMessageDelete(message._id.toString())
     }
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Card Title</CardTitle>
+                <CardTitle>Anonymous message</CardTitle>
 
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive"><X className="w-5 h-5"/></Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete your
-                                account from our servers.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteConfirm}>Continue</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <CardAction>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon">
+                                <X className="w-5 h-5"/>
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. The selected anonymous message will be removed permanently.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </CardAction>
 
-                <CardDescription>Card Description</CardDescription>
-                <CardAction>Card Action</CardAction>
+                <CardDescription>
+                    {new Date(message.createdAt).toLocaleString()}
+                </CardDescription>
             </CardHeader>
             <CardContent>
+                <p>{message.content}</p>
             </CardContent>
         </Card>
     )

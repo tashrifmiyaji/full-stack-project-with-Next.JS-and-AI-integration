@@ -1,12 +1,11 @@
 'use client'
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { User } from "next-auth";
 import { Button } from "./ui/button";
 
 const Navbar = () => {
   const { data: session } = useSession();
-  const user: User = session?.user
+  const user = session?.user
 
   return (
     <nav className="p-4 md:p-6 shadow-md">

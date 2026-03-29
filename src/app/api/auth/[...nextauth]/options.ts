@@ -1,11 +1,16 @@
 // external imports
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, User as NextAuthUser } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
 // internal imports
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User.model";
+
+type CredentialsInput = {
+	identifier: string;
+	password: string;
+};
 
 export const authOptions: NextAuthOptions = {
 	providers: [
@@ -24,17 +29,22 @@ export const authOptions: NextAuthOptions = {
 					placeholder: "enter your password",
 				},
 			},
-			async authorize(credentials: any): Promise<any> {
+			async authorize(credentials): Promise<NextAuthUser | null> {
 				await dbConnect();
 				try {
-					if (!credentials?.identifier || !credentials.password) {
+					const typedCredentials = credentials as CredentialsInput | undefined;
+
+					if (
+						!typedCredentials?.identifier ||
+						!typedCredentials.password
+					) {
 						throw new Error("missing credentials");
 					}
 
 					const user = await UserModel.findOne({
 						$or: [
-							{ email: credentials.identifier },
-							{ username: credentials.identifier },
+							{ email: typedCredentials.identifier },
+							{ username: typedCredentials.identifier },
 						],
 					});
 
@@ -49,12 +59,19 @@ export const authOptions: NextAuthOptions = {
 					}
 
 					const isPasswordCorrect = await bcrypt.compare(
-						credentials.password,
+						typedCredentials.password,
 						user.password,
 					);
 
 					if (isPasswordCorrect) {
-						return user;
+						return {
+							id: user._id.toString(),
+							_id: user._id.toString(),
+							email: user.email,
+							username: user.username,
+							isVerified: user.isVerified,
+							isAcceptingMessage: user.isAcceptingMessage,
+						};
 					} else {
 						throw new Error("invalid credential!");
 					}
@@ -71,7 +88,7 @@ export const authOptions: NextAuthOptions = {
 			if (user) {
 				token._id = user._id?.toString();
 				token.isVerified = user.isVerified;
-				token.isAcceptingMessages = user.isAcceptingMessages;
+				token.isAcceptingMessages = user.isAcceptingMessage;
 				token.username = user.username;
 			}
 			return token;

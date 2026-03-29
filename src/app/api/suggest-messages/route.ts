@@ -27,11 +27,14 @@ export async function POST() {
 		});
 
 		return result.toUIMessageStreamResponse();
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error("an unexpected error occurred!", error);
 		return new Response(
 			JSON.stringify({
-				error: error?.message || "Internal Server Error",
+				error:
+					error instanceof Error
+						? error.message
+						: "Internal Server Error",
 			}),
 			{ status: 500 },
 		);

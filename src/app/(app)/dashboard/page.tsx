@@ -3,7 +3,7 @@ import MessageCard from '@/components/MessageCard'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { Message, User } from '@/model/User.model'
+import { Message } from '@/model/User.model'
 import { acceptMessageSchema } from '@/schemas/acceptMessageSchema'
 import { ApiResponse } from '@/types/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,15 +14,15 @@ import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
-const page = () => {
+const DashboardPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSwitchLoading, setSwitchLoading] = useState(false);
   const [profileUrl, setProfileUrl] = useState('')
 
-  const handleDeleteMessage = (messageId: any) => {
-    setMessages(messages.filter((message) => {
-      return message._id !== messageId
+  const handleDeleteMessage = (messageId: string) => {
+    setMessages((currentMessages) => currentMessages.filter((message) => {
+      return message._id.toString() !== messageId
     }))
   }
 
@@ -85,9 +85,10 @@ const page = () => {
 
   // handle switch change
   const handleSwitchChange = async () => {
+    setSwitchLoading(true)
     try {
       const response = await axios.post<ApiResponse>('/api/accept-messages', {
-        acceptMessages: !acceptMessages
+        acceptMessage: !acceptMessages
       })
 
       setValue("acceptMessage", !acceptMessages);
@@ -98,9 +99,11 @@ const page = () => {
         description: axiosError.response?.data.message ||
           "Failed to fetch message settings!"
       })
+    } finally {
+      setSwitchLoading(false)
     }
   }
-  const username = (session?.user as User)?.username || ''
+  const username = session?.user?.username || ''
   useEffect(() => {
     if (typeof window !== 'undefined' && username) {
       const baseUrl = `${window.location.protocol}//${window.location.host}`
@@ -163,4 +166,4 @@ const page = () => {
   )
 }
 
-export default page 
+export default DashboardPage
