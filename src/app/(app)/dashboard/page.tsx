@@ -9,6 +9,7 @@ import { ApiResponse } from '@/types/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios, { AxiosError } from 'axios'
 import { Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -19,6 +20,7 @@ const DashboardPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSwitchLoading, setSwitchLoading] = useState(false);
   const [profileUrl, setProfileUrl] = useState('')
+  const router = useRouter()
 
   const handleDeleteMessage = (messageId: string) => {
     setMessages((currentMessages) => currentMessages.filter((message) => {
@@ -111,9 +113,25 @@ const DashboardPage = () => {
     }
   }, [username])
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(profileUrl)
-    toast.success("URL copied", { description: "Profile URL has been copied to clipboard" })
+  const copyToClipboard = async () => {
+    if (!profileUrl || !username) {
+      toast.error("লিংক পাওয়া যায়নি", {
+        description: "একটু পরে আবার চেষ্টা করুন।"
+      })
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(profileUrl)
+      toast.success("লিংক কপি হয়েছে", {
+        description: "এখন আপনাকে পাবলিক প্রোফাইলে নেওয়া হচ্ছে।"
+      })
+      router.push(`/u/${username}`)
+    } catch {
+      toast.error("লিংক কপি করা যায়নি", {
+        description: "ব্রাউজার পারমিশন চেক করুন।"
+      })
+    }
   }
 
   // if (!session || !session.user) {
@@ -127,7 +145,7 @@ const DashboardPage = () => {
         <h2 className='text-lg font-semibold mb-2'>Copy Your Unique Link</h2>{' '}
         <div className='flex items-center'>
           <input type="text" value={profileUrl} disabled className='input input-bordered w-full p-2 mr-2' />
-          <Button onClick={copyToClipboard}>Copy</Button>
+          <Button onClick={copyToClipboard} disabled={!profileUrl}>Copy</Button>
         </div>
       </div>
       <div className='mb-4'>

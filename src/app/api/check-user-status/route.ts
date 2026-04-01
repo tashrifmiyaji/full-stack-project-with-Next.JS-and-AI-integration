@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 		}
 
 		console.log(
-			`[check-user-status] identifier=${identifier}, username=${user.username}, isVerified=${user.isVerified}`,
+			`[check-user-status] identifier=${identifier}, username=${user.username}, isVerified=${user.isVerified}, isAcceptingMessage=${user.isAcceptingMessage}`,
 		);
 
 		return Response.json(
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
 					: "user is not verified",
 				username: user.username,
 				isVerified: user.isVerified,
+				isAcceptingMessage: user.isAcceptingMessage,
 			},
 			{ status: 200 },
 		);

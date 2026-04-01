@@ -1,42 +1,71 @@
-import { streamText, UIMessage, convertToModelMessages } from "ai";
+import { streamText } from "ai";
 
-export async function POST() {
+const FALLBACK_SUGGESTIONS =
+	"আজকাল কোন ছোট জিনিসটা তোমাকে সবচেয়ে বেশি খুশি করে?||এই সপ্তাহে নতুন কী শিখেছ?||তোমার স্বপ্নের একটা দিন কেমন হবে?";
+
+export async function POST(req: Request) {
 	try {
-		const prompt =
-			"Create a list of three open-ended and engaging  questions formatted as a single string. Each question should be separated by '||'. These questions are for an anonymous social messaging platform, like Qooh.me, and should be suitable for a diverse audience. Avoid Personal or sensitive topics, focusing instead on universal themes that encourage friendly interaction. For example, your output should be structured like this: 'what's a hobby you've recently started? || If you could have dinner with any historical figure, who would it be? || What's a simple thing that makes you happy?'. Ensure the questions are intriguing, foster curiosity, and contribute to a positive and welcoming conversational environment";
+		const body = await req.json().catch(() => ({}));
+		const userPrompt =
+			typeof body?.prompt === "string" ? body.prompt.trim() : "";
 
-		const messages: UIMessage[] = [
-			{
-				id: "1",
-				role: "user",
-				parts: [
-					{
-						type: "text",
-						text: prompt,
-					},
-				],
-			},
-		];
+		const prompt = [
+			"Generate exactly 3 short, open-ended, friendly questions for an anonymous social messaging app.",
+			"Return only one plain string.",
+			"Separate each question with '||'.",
+			"Do not add numbering, bullets, markdown, quotes, or extra explanation.",
+			userPrompt ? `User preference: ${userPrompt}` : "",
+		]
+			.filter(Boolean)
+			.join(" ");
 
 		const result = streamText({
 			model: "openai/gpt-5.3-chat",
-			messages: await convertToModelMessages(messages),
+			prompt,
 			onError: (error) => {
 				console.error("Stream error:", error);
 			},
 		});
 
-		return result.toUIMessageStreamResponse();
+		const encoder = new TextEncoder();
+		let hasReceivedText = false;
+
+		const safeTextStream = new ReadableStream<Uint8Array>({
+			async start(controller) {
+				try {
+					for await (const chunk of result.textStream) {
+						if (!chunk) continue;
+						hasReceivedText = true;
+						controller.enqueue(encoder.encode(chunk));
+					}
+
+					if (!hasReceivedText) {
+						controller.enqueue(encoder.encode(FALLBACK_SUGGESTIONS));
+					}
+				} catch (error) {
+					console.error("suggest-messages stream failed:", error);
+					controller.enqueue(encoder.encode(FALLBACK_SUGGESTIONS));
+				} finally {
+					controller.close();
+				}
+			},
+		});
+
+		return new Response(safeTextStream, {
+			status: 200,
+			headers: {
+				"Content-Type": "text/plain; charset=utf-8",
+				"Cache-Control": "no-store",
+			},
+		});
 	} catch (error: unknown) {
-		console.error("an unexpected error occurred!", error);
-		return new Response(
-			JSON.stringify({
-				error:
-					error instanceof Error
-						? error.message
-						: "Internal Server Error",
-			}),
-			{ status: 500 },
-		);
+		console.error("an unexpected error occurred in suggest-messages!", error);
+		return new Response(FALLBACK_SUGGESTIONS, {
+			status: 200,
+			headers: {
+				"Content-Type": "text/plain; charset=utf-8",
+				"Cache-Control": "no-store",
+			},
+		});
 	}
 }
